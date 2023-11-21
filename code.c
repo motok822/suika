@@ -1,6 +1,6 @@
 #include "suika.h"
 Point Default = {.x = -1, .y = -1, .weight = nothing, .state = Dead};
-PointQueue pq;
+PointQueue pq; //PointQueueの先頭のpはNULLに設定
 
 void initialize_board(Board* b){
     b->field = (Point***)malloc(sizeof(Point**)*Board_SIZE);
@@ -71,45 +71,37 @@ void drop_point(Board* b, Point* p){
     p->state = Dead;
 }   
 
-void chech_board(Board* b, Point* p){
-    
-}
-
-Point* get_character(int c, Board* b, Point* p){
-    switch(c){
-        case -1:
-            update_board(b, p);
-            break;
-        case 'd':
-            if(search_alive_point(b) && IsInBoard(p, 0, 1)){
-                release_board(b, p);
-                p-> y += 1;
-                update_board(b, p);
-                break;
-            }//elseの場合はdefaultの処理
-        case 'a':
-            if(c =='a' && search_alive_point(b) && IsInBoard(p, 0, -1)){
-                release_board(b, p);
-                p -> y -= 1;
-                update_board(b, p);
-                break;
-            }//elseの場合はdefaultの処理
-        case 's':
-            if(c == 's' && search_alive_point(b)){
-                release_board(b, p);
-                drop_point(b, p);
-                update_board(b, p);
-                break;
-            }//elseの場合はdefaultの処理
-        default:
-            if(!search_alive_point(b)){
-                p = new_point(RandomFruit);
-                update_board(b, p);
-            }else update_board(b, p);
-            break;
-        case '.': break;
+int touching(Board* b,Point* p, Point* q){
+    int flag = 0;
+    if(p->x > 0){
+        for(int i = 0;i < p->weight+1;i++){
+            if(p->y + i >= 0 && p->y + i < Board_SIZE){
+                if(b->field[p->x-1][p->y+i] == q)flag = 1; 
+            }
+        }
     }
-    return p;
+    if(p->x < Board_SIZE - p->weight){
+        for(int i = 0;i < p->weight+1;i++){
+            if(p->y + i >= 0 && p->y + i < Board_SIZE){
+                if(b->field[p->x+p->weight][p->y+i] == q)flag = 1; 
+            }
+        }
+    }
+    if(p->y > 0){
+        for(int i = 0;i < p->weight+1;i++){
+            if(p->x + i >= 0 && p->x + i < Board_SIZE){
+                if(b->field[p->x+i][p->y-1] == q)flag = 1; 
+            }
+        }
+    }
+    if(p->y < Board_SIZE - p->weight){
+        for(int i = 0;i < p->weight+1;i++){
+            if(p->x + i >= 0 && p->x + i < Board_SIZE){
+                if(b->field[p->x+i][p->y+p->weight] == q)flag = 1; 
+            }
+        }
+    }
+    return flag;
 }
 
 void update_board(Board* b, Point* p){
@@ -121,6 +113,91 @@ void update_board(Board* b, Point* p){
         }
     }
 }
+
+int able_to_put(Board* b, Point* p){
+    int topX = p-> x;
+    int topY = p-> y;
+    int flag = 1;
+    for(int i = 0;i < p->weight;i++){
+        for(int j = 0;j < p->weight;j++){
+            if(b->field[topX+i][topY+j] != &Default)flag = 0;
+        }
+    }
+    return flag;
+}
+
+void update_grown_point_board(Board* b, Point* p){
+    int topX = p->x - 1;
+    int topY = p->y - 1;
+    for(int i = 0;i < p->weight;i++){
+        if(topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
+            p->x = topX;
+            p->y = topY + i;
+            if(able_to_put(b, p)){ //他のPointを押しのけない
+                update_board(b, p);
+                break;
+            }
+        }
+    }
+}
+
+void check_board(Board* b, Point* p){
+    PointQueue* top = &pq;
+    Point* mergeP = NULL;
+    if(!top)return;
+    while(top){
+        if(top->p && top->p->weight == p -> weight && touching(b, top->p, p)){
+            release_board(b, p);
+            delete_point(p);
+            release_board(b, top->p);
+            top->p->weight += 1;
+            update_grown_point_board(b, top->p);
+            mergeP = top->p;
+            break;
+        }
+        top = top->next;
+    }
+    if(mergeP)check_board(b, mergeP);
+}
+
+Point* get_character(int c, Board* b, Point* p){
+    switch(c){
+        case -1:
+            update_board(b, p);
+            break;
+        case 'd'://右に移動
+            if(search_alive_point(b) && IsInBoard(p, 0, 1)){
+                release_board(b, p);
+                p-> y += 1;
+                update_board(b, p);
+                break;
+            }//elseの場合はdefaultの処理
+        case 'a'://左に移動
+            if(c =='a' && search_alive_point(b) && IsInBoard(p, 0, -1)){
+                release_board(b, p);
+                p -> y -= 1;
+                update_board(b, p);
+                break;
+            }//elseの場合はdefaultの処理
+        case 's'://drop
+            if(c == 's' && search_alive_point(b)){
+                release_board(b, p);
+                drop_point(b, p);
+                update_board(b, p);
+                check_board(b, p);   
+                break;
+            }//elseの場合はdefaultの処理
+        default: //Pointの追加
+            if(!search_alive_point(b)){
+                p = new_point(RandomFruit);
+                update_board(b, p);
+            }else update_board(b, p);
+            break;
+        case '.': break;
+    }
+    return p;
+}
+
 
 Point* new_point(int random){
     Point* new;
@@ -136,45 +213,3 @@ Point* new_point(int random){
     insert_point(new);
     return new;
 }
-
-void insert_point(Point* p){
-    if(pq.p == NULL){
-        pq.p = p;
-        return;
-    }
-    PointQueue* top = &pq;
-    while(top->next){
-        top = top->next;
-    }
-    PointQueue* q = top;
-    PointQueue* new = malloc(sizeof(PointQueue));
-    new->p = p;
-    q->next = new;
-    new->previous = q;
-}
-
-void delete_point(Point* p){
-    PointQueue* top = &pq;
-    while(top->p){
-        if(top->p == p){
-            if(!top->next){
-                top->next->previous = top->previous;
-            }
-            if(!top->previous){
-                top->previous->next = top->next;
-            }
-        }
-        top = top->next;
-        if(!top)break;
-    }
-}
-
-void show_PointQueue(){
-    PointQueue* top = &pq;
-    while(top->p){
-        printf("%d", top->p->weight);
-        top = top -> next;
-        if(!top)break;
-    }
-}
-

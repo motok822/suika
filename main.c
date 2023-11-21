@@ -27,7 +27,6 @@ int main(int argc, char* argv[]){
             break;
         }
     }
-    
     system("/bin/stty cooked");  // 後始末
     return 0;
 

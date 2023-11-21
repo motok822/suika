@@ -42,12 +42,16 @@ extern PointQueue pq;
 void initialize_board(Board* b);
 void show_board(Board b);
 void update_board(Board* b, Point* p);
+void update_grown_point_board(Board* b, Point* p);
+int able_to_put(Board* b, Point* p);
 void release_board(Board* b, Point* p);
 int search_alive_point(Board* b);
 int IsInBoard(Point*p, int dx, int dy);
 void drop_point(Board* b, Point* p);
 Point* new_point(int random);
 Point* get_character(int, Board*, Point*);
+int touching(Board* b, Point* p, Point* q);
+
 
 void insert_point(Point* p);
 void delete_point(Point* p);
