@@ -1,6 +1,6 @@
 #include "suika.h"
-Point Default = {.x = -1, .y = -1, .weight = nothing, .state = Dead};
-PointQueue pq; //PointQueueの先頭のpはNULLに設定
+Point Default = {.x = -1, .y = -1, .weight = nothing, .state = Dead, .above=NULL, .below=NULL, .left=NULL, .right=NULL};
+// PointQueue pq; //PointQueueの先頭のpはNULLに設定
 
 void initialize_board(Board* b){
     b->field = (Point***)malloc(sizeof(Point**)*Board_SIZE);
@@ -67,6 +67,32 @@ void drop_point(Board* b, Point* p){
             p->x --;
             break;
         }
+    }// p->x p->y に配置
+
+    //ここからはグラフの構築
+    if(p->x < Board_SIZE - p->weight){ //下方向の接触
+        for(int i = 0;i < p->weight;i++){
+            if(b->field[p->x+p->weight][p->y+i] != &Default){
+                insert_above(b->field[p->x+p->weight][p->y+i], p);
+                insert_below(p, b->field[p->x+p->weight][p->y+i]);
+            }
+        }
+    }
+    if(p->y > 0){ //左方向の接触
+        for(int i = 0;i < p->weight;i++){
+            if(b->field[p->x+i][p->y-1] != &Default){
+                insert_right(b->field[p->x+i][p->y-1], p);
+                insert_left(p,b->field[p->x+i][p->y-1]);
+            }
+        }
+    }
+    if(p->y < Board_SIZE - p->weight){ //右方向の接触
+        for(int i = 0;i < p->weight;i++){
+            if(b->field[p->x+i][p->y+p->weight] != &Default){
+                insert_left(b->field[p->x+i][p->y+p->weight], p);
+                insert_right(p, b->field[p->x+i][p->y+p->weight]);
+            }
+        }
     }
     p->state = Dead;
 }   
@@ -129,35 +155,75 @@ int able_to_put(Board* b, Point* p){
 void update_grown_point_board(Board* b, Point* p){
     int topX = p->x - 1;
     int topY = p->y - 1;
+    int put = 0;
     for(int i = 0;i < p->weight;i++){
         if(topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
             p->x = topX;
             p->y = topY + i;
             if(able_to_put(b, p)){ //他のPointを押しのけない
                 update_board(b, p);
+                put = 1;
                 break;
             }
         }
     }
+    // if(put == 0){ //他のPointを押しのけないで置くことが不可能
+    //     for(int i = 0;i < p->weight;i++){
+    //         if(topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
+
+    //         }
+    //     }
+    // }
+}
+
+// void check_board(Board* b, Point* p){
+//     PointQueue* top = &pq;
+//     Point* mergeP = NULL;
+//     if(!top)return;
+//     while(top){
+//         if(top->p && top->p->weight == p -> weight && touching(b, top->p, p)){
+//             release_board(b, p);
+//             delete_point(p);
+//             release_board(b, top->p);
+//             top->p->weight += 1;
+//             update_grown_point_board(b, top->p);
+//             mergeP = top->p;
+//             break;
+//         }
+//         top = top->next;
+//     }
+//     if(mergeP)check_board(b, mergeP);
+// }
+
+Point* grown_one_direction(Board* b, LinkList* l, Point* p){
+    Point* q;
+    if((q = search_same_weight_linklist(l, p)) && q){
+        release_board(b, p);
+        // delete_point(p);
+        release_board(b, q);
+        q -> weight += 1;
+        update_grown_point_board(b, q);
+        return q;
+    }
+    return NULL;
+}
+
+int search_point_num(LinkList* l, Point* p){
+    int num = 0;
+    while(l){
+        num += 1;
+        l = l -> next;
+    }
+    return num;
 }
 
 void check_board(Board* b, Point* p){
-    PointQueue* top = &pq;
-    Point* mergeP = NULL;
-    if(!top)return;
-    while(top){
-        if(top->p && top->p->weight == p -> weight && touching(b, top->p, p)){
-            release_board(b, p);
-            delete_point(p);
-            release_board(b, top->p);
-            top->p->weight += 1;
-            update_grown_point_board(b, top->p);
-            mergeP = top->p;
-            break;
-        }
-        top = top->next;
-    }
-    if(mergeP)check_board(b, mergeP);
+    Point* merge = NULL;
+    if((merge = grown_one_direction(b, p->above, p)) && merge);
+    else if((merge = grown_one_direction(b, p->below, p)) && merge);
+    else if((merge = grown_one_direction(b, p->left, p)) && merge );
+    else if((merge = grown_one_direction(b, p->right, p)) && merge);
+    if(merge)check_board(b, merge);
 }
 
 Point* get_character(int c, Board* b, Point* p){
@@ -210,6 +276,9 @@ Point* new_point(int random){
     }else{
         new->weight = rand() % FruitKind + 1;
     }
-    insert_point(new);
+    new -> above = malloc(sizeof(LinkList));
+    new -> below = malloc(sizeof(LinkList));
+    new -> right = malloc(sizeof(LinkList));
+    new -> left = malloc(sizeof(LinkList));
     return new;
 }
