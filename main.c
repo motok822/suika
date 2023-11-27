@@ -1,4 +1,5 @@
 #include "suika.h"
+int GameOver = 0;
 
 int main(int argc, char* argv[]){
     Board b;
@@ -23,12 +24,15 @@ int main(int argc, char* argv[]){
         system("clear");
         printf("Press '.' to close\r\n");        
         printf("You pressed '%c'\r\n", c);
-        printf("%s\r\n", str);
 
-        pos = get_character(c, &b, pos);
-        show_board(b);
-        // show_PointQueue();
-        str[i] = (char)c;
+        pos = get_character(c, &b, pos);    
+        under_line(&b, pos);
+        show_board(&b);
+        reset_line(&b, pos);
+        if(GameOver == 1){
+            printf("GameOver\r\n");
+            break;
+        }
         if ((c = getchar()) == '.') { // '.' を押すと抜ける
             break;
         }

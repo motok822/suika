@@ -9,13 +9,13 @@ void insert_point(LinkList* top, Point* p){
     new->p = p;
     top->next = new;
     new->previous = top;
-    printf("insert\r\n");
 }
 
-void delete_point(LinkList* top,Point* p){
+void delete_point_in_linklist(LinkList* top,Point* p){
     if(!top)return;
-    while(top->p){
+    while(top){
         if(top->p == p){
+            top -> p = NULL;
             if(top->next){
                 top->next->previous = top->previous;
             }
@@ -25,6 +25,29 @@ void delete_point(LinkList* top,Point* p){
         }
         top = top->next;
         if(!top)break;
+    }
+}
+
+void delete_point(Point* p){
+    LinkList* top = p -> above;
+    while(top){
+        if(top -> p)delete_point_in_linklist(top -> p -> below, p);
+        top = top -> next;
+    }
+    top = p -> below;
+    while(top){
+        if(top -> p)delete_point_in_linklist(top -> p -> above, p);
+        top = top -> next;
+    }
+    top = p -> right;
+    while(top){
+        if(top -> p)delete_point_in_linklist(top -> p -> left, p);
+        top = top -> next;
+    }
+    top = p -> left;
+    while(top){
+        if(top -> p)delete_point_in_linklist(top -> p -> right, p);
+        top = top -> next;
     }
 }
 
@@ -70,37 +93,3 @@ void insert_right(Point* p, Point* q){
 void insert_left(Point* p, Point* q){
    if(!search_point_linklist(p->left, q))insert_point(p->left, q);
 }
-// int search_point_in_graph(Graph* top, Point* p){
-//     if(!top || !top -> p)return 0;
-//     if(top -> p && top -> p == p)return 1;
-//     int flag = 0;
-//     if(top -> above){
-//         Graph* k = top -> above -> g;
-//         while(k){
-//             flag |= search_point_in_graph(k, p);
-//             k = k -> next;
-//         }
-//     }
-//     if(top -> below){
-//         Graph* k = top -> below -> g;
-//         while(k){
-//             flag |= search_point_in_graph(k, p);
-//             k = k -> next;
-//         }
-//     }
-//     if(top -> right){
-//         Graph* k = top -> right -> g;
-//         while(k){
-//             flag |= search_point_in_graph(k, p);
-//             k = k -> next;
-//         }
-//     }
-//     if(top -> left){
-//         Graph* k = top -> left -> g;
-//         while(k){
-//             flag |= search_point_in_graph(k, p);
-//             k = k -> next;
-//         }
-//     }
-//     return flag;
-// }

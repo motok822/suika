@@ -1,5 +1,6 @@
 #include "suika.h"
 Point Default = {.x = -1, .y = -1, .weight = nothing, .state = Dead, .above=NULL, .below=NULL, .left=NULL, .right=NULL};
+Point Default2 = {.x = 1000, .y = 1000, .weight = nothing, .state = Dead, .above=NULL, .below=NULL, .left=NULL, .right=NULL};
 // PointQueue pq; //PointQueueの先頭のpはNULLに設定
 
 void initialize_board(Board* b){
@@ -14,13 +15,66 @@ void initialize_board(Board* b){
     }
 }
 
-void show_board(Board b){
+void show_board(Board *b){
     for(int i = 0;i < Board_SIZE;i++){
         for(int j = 0;j < Board_SIZE;j++){
-            if(b.field[i][j]->weight == nothing){
-                printf("-");
-            }else{
-                printf("%c", b.field[i][j]->weight + '0');
+            switch(b -> field[i][j]->weight){
+                case nothing:
+                    printf("\x1b[39m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("-");
+                    }
+                    break;
+                case banana:
+                    printf("\x1b[33m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
+                case strawberry:
+                    printf("\x1b[31m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
+                case pear:
+                    printf("\x1b[36m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
+                case apple:
+                    printf("\x1b[34m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
+                case grape:
+                    printf("\x1b[35m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
+                case watermelon:
+                    printf("\x1b[32m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
             }
         }
         printf("\r\n");
@@ -47,29 +101,12 @@ void release_board(Board* b, Point* p){
     int LeftY = p->y;
     for(int i = 0;i < p->weight;i++){
         for(int j = 0;j < p->weight;j++){
-            b->field[TopX+i][LeftY+j] = &Default;
+            if(b->field[TopX+i][LeftY+j]== p)b->field[TopX+i][LeftY+j] = &Default;
         }
     }
 }
 
-void drop_point(Board* b, Point* p){
-    while(1){
-        p -> x++;
-        if(p->x + p->weight > Board_SIZE){
-            p->x --;
-            break;
-        }
-        int flag = 0;
-        for(int i = 0;i < p->weight;i++){
-            if(b->field[p->x+p->weight-1][p->y+i] != &Default)flag = 1;
-        }
-        if(flag == 1){
-            p->x --;
-            break;
-        }
-    }// p->x p->y に配置
-
-    //ここからはグラフの構築
+void make_graph(Board* b, Point* p){
     if(p->x < Board_SIZE - p->weight){ //下方向の接触
         for(int i = 0;i < p->weight;i++){
             if(b->field[p->x+p->weight][p->y+i] != &Default){
@@ -94,6 +131,27 @@ void drop_point(Board* b, Point* p){
             }
         }
     }
+}
+
+void drop_point(Board* b, Point* p){
+    while(1){
+        p -> x++;
+        if(p->x + p->weight > Board_SIZE){
+            p->x --;
+            break;
+        }
+        int flag = 0;
+        for(int i = 0;i < p->weight;i++){
+            if(b->field[p->x+p->weight-1][p->y+i] != &Default)flag = 1;
+        }
+        if(flag == 1){
+            p->x --;
+            break;
+        }
+    }// p->x p->y に配置
+
+    //ここからはグラフの構築
+    make_graph(b, p);
     p->state = Dead;
 }   
 
@@ -167,48 +225,38 @@ void update_grown_point_board(Board* b, Point* p){
             }
         }
     }
-    // if(put == 0){ //他のPointを押しのけないで置くことが不可能
-    //     for(int i = 0;i < p->weight;i++){
-    //         if(topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
-
-    //         }
-    //     }
-    // }
+    if(put == 0){ //他のPointを押しのけないで置くことが不可能 上に押しのけるのは確定で、左か右かは不確定
+        p -> x = topX;
+        p -> y = topY;
+        push_above(b, p -> above);
+        if(GameOver)return;
+        if(able_to_put_left(p -> left)){
+            push_left(b, p -> left);
+            update_board(b, p);
+        }else if(able_to_put_right(p -> right)){
+            push_right(b, p->right);
+            p -> y ++;
+            update_board(b, p);
+        }
+    }
 }
-
-// void check_board(Board* b, Point* p){
-//     PointQueue* top = &pq;
-//     Point* mergeP = NULL;
-//     if(!top)return;
-//     while(top){
-//         if(top->p && top->p->weight == p -> weight && touching(b, top->p, p)){
-//             release_board(b, p);
-//             delete_point(p);
-//             release_board(b, top->p);
-//             top->p->weight += 1;
-//             update_grown_point_board(b, top->p);
-//             mergeP = top->p;
-//             break;
-//         }
-//         top = top->next;
-//     }
-//     if(mergeP)check_board(b, mergeP);
-// }
 
 Point* grown_one_direction(Board* b, LinkList* l, Point* p){
     Point* q;
     if((q = search_same_weight_linklist(l, p)) && q){
         release_board(b, p);
-        // delete_point(p);
         release_board(b, q);
+        delete_point(p);
+        delete_point(q);
         q -> weight += 1;
         update_grown_point_board(b, q);
+        make_graph(b, q);
         return q;
     }
     return NULL;
 }
 
-int search_point_num(LinkList* l, Point* p){
+int search_point_num(LinkList* l){
     int num = 0;
     while(l){
         num += 1;
@@ -222,7 +270,7 @@ void check_board(Board* b, Point* p){
     if((merge = grown_one_direction(b, p->above, p)) && merge);
     else if((merge = grown_one_direction(b, p->below, p)) && merge);
     else if((merge = grown_one_direction(b, p->left, p)) && merge );
-    else if((merge = grown_one_direction(b, p->right, p)) && merge);
+    else if((merge = grown_one_direction(b  , p->right, p)) && merge);
     if(merge)check_board(b, merge);
 }
 
@@ -235,6 +283,7 @@ Point* get_character(int c, Board* b, Point* p){
             if(search_alive_point(b) && IsInBoard(p, 0, 1)){
                 release_board(b, p);
                 p-> y += 1;
+                if(!able_to_put(b, p))p -> y --;
                 update_board(b, p);
                 break;
             }//elseの場合はdefaultの処理
@@ -242,6 +291,7 @@ Point* get_character(int c, Board* b, Point* p){
             if(c =='a' && search_alive_point(b) && IsInBoard(p, 0, -1)){
                 release_board(b, p);
                 p -> y -= 1;
+                if(!able_to_put(b, p))p -> y++;
                 update_board(b, p);
                 break;
             }//elseの場合はdefaultの処理
@@ -256,7 +306,11 @@ Point* get_character(int c, Board* b, Point* p){
         default: //Pointの追加
             if(!search_alive_point(b)){
                 p = new_point(RandomFruit);
-                update_board(b, p);
+                if(!able_to_put(b, p)){
+                    GameOver = 1;
+                }else{
+                    update_board(b, p);
+                }
             }else update_board(b, p);
             break;
         case '.': break;
@@ -281,4 +335,29 @@ Point* new_point(int random){
     new -> right = malloc(sizeof(LinkList));
     new -> left = malloc(sizeof(LinkList));
     return new;
+}
+
+void under_line(Board* b, Point* p){
+    int x = p -> x + p -> weight;
+    while(p -> state == Alive && x < Board_SIZE){
+        if(b->field[x][p -> y] == &Default){
+            Default2.weight = p -> weight;
+            b -> field[x][p -> y] = &Default2; 
+        }else{
+            break;
+        }
+        x++;
+    }
+}
+
+void reset_line(Board* b, Point* p){
+    int x = p -> x + p -> weight;
+    while(p -> state == Alive && x < Board_SIZE){
+        if(b->field[x][p -> y] == &Default2){
+            b -> field[x][p -> y] = &Default;
+        }else{
+            break;
+        }
+        x++;
+    }
 }

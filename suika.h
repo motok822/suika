@@ -6,18 +6,16 @@
 #define Dead 0
 #define FruitKind 4
 #define RandomFruit 1
-
+extern int GameOver;
 
 typedef enum{
-    nothing, //0
-    banana,  
-    strawberry,
-    orange,
-    pear,
-    apple,
-    grape,
-    melon,
-    watermelon,
+    nothing, //white
+    banana,  //yellow
+    strawberry, //red
+    pear,   //skyblue
+    apple,  //blue
+    grape,  //magenta
+    watermelon,  //green
 }fruit;
 
 typedef struct Point{
@@ -56,7 +54,7 @@ typedef struct Board{
 }Board;
 
 void initialize_board(Board* b);
-void show_board(Board b);
+void show_board(Board* b);
 void update_board(Board* b, Point* p);
 void update_grown_point_board(Board* b, Point* p);
 int able_to_put(Board* b, Point* p);
@@ -69,9 +67,13 @@ Point* get_character(int, Board*, Point*);
 int touching(Board* b, Point* p, Point* q);
 Point* grown_one_direction(Board* b, LinkList* l, Point* p);
 void check_board(Board* b, Point* p);
+void make_graph(Board* b, Point* p);
+void under_line(Board* b, Point* p);
+void reset_line(Board* b, Point* p);
 
 void insert_point(LinkList* top,Point* p);
-void delete_point(LinkList* top,Point* p);
+void delete_point(Point* p);
+void delete_point_in_linklist(LinkList* top,Point* p);
 int search_point_linklist(LinkList* l, Point* p);
 int search_adjoining_point(Point* center, Point* p);
 void show_PointQueue();//debug
@@ -80,6 +82,21 @@ void insert_above(Point* p, Point* q);
 void insert_below(Point* p, Point* q);
 void insert_right(Point* p, Point* q);
 void insert_left(Point* p, Point* q);
+int search_point_num(LinkList* l);
 
+void minus_left(Board* b, LinkList* top);
+void delete_graph_left_linklist(Board* b, LinkList* top);
+void make_graph_left_linklist(Board* b, LinkList* top);
+void push_left(Board* b, LinkList* top);
+void plus_right(Board* b, LinkList* top);
+void delete_graph_right_linklist(Board* b, LinkList* top);
+void make_graph_right_linklist(Board* b, LinkList* top);
+void push_right(Board* b, LinkList* top);
+void minus_above(Board* b, LinkList* top);
+void delete_graph_above_linklist(Board* b, LinkList* top);
+void make_graph_above_linklist(Board* b, LinkList* top);
+void push_above(Board* b, LinkList* top);
+int able_to_put_left(LinkList* top);
+int able_to_put_right(LinkList* top);
 // void insert_graph(GraphList* top, Graph* g);
 // void insert_graph(GraphList* top, Graph* g);
