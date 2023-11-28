@@ -106,8 +106,26 @@ void release_board(Board* b, Point* p){
     }
 }
 
+void reset_graph(Board* b){
+    for(int i = 0;i < Board_SIZE;i++){
+        for(int j = 0;j < Board_SIZE;j++){
+            Point* p = b->field[i][j];
+            if(p != &Default){
+                p -> above -> next = NULL;
+                p -> below -> p = NULL;
+                p -> below -> next = NULL;
+                p -> right -> p = NULL;
+                p -> right -> next = NULL;
+                p -> left -> p = NULL;
+                p -> left -> next = NULL;
+            }
+        }
+    }   
+}
+
 void make_all_graph(Board* b){
     LinkList* list = malloc(sizeof(LinkList));
+    reset_graph(b);
     for(int i = 0;i < Board_SIZE;i++){
         for(int j = 0;j < Board_SIZE;j++){
             Point* p = b->field[i][j];
@@ -259,10 +277,15 @@ void update_grown_point_board(Board* b, Point* p){
 Point* grown_one_direction(Board* b, LinkList* l, Point* p){
     Point* q;
     if((q = search_same_weight_linklist(l, p)) && q){
-        release_board(b, p);
-        release_board(b, q);
         delete_point(p);
         delete_point(q);
+        release_board(b, p);
+        release_board(b, q);
+        LinkList* used = malloc(sizeof(LinkList));
+        p -> above = NULL;
+        p -> below = NULL;
+        p -> right = NULL;
+        p -> left = NULL;
         if(q -> weight != watermelon){
             q -> weight += 1;
             update_grown_point_board(b, q);
@@ -326,7 +349,7 @@ Point* get_character(int c, Board* b, Point* p){
             }//elseの場合はdefaultの処理
         default: //Pointの追加
             if(!search_alive_point(b)){
-                p = new_point(RandomFruit);
+                p = new_point(b, RandomFruit);
                 if(!able_to_put(b, p)){
                     GameOver = 1;
                 }else{
@@ -340,7 +363,7 @@ Point* get_character(int c, Board* b, Point* p){
 }
 
 
-Point* new_point(int random){
+Point* new_point(Board* b, int random){
     Point* new;
     new = malloc(sizeof(Point));
     new->x = 0;
@@ -355,6 +378,11 @@ Point* new_point(int random){
     new -> below = malloc(sizeof(LinkList));
     new -> right = malloc(sizeof(LinkList));
     new -> left = malloc(sizeof(LinkList));
+    for(int i = 0;i < Board_SIZE - new->weight;i++){
+        if(!able_to_put(b, new)){
+            new -> y ++;
+        }else break; 
+    }
     return new;
 }
 
@@ -391,9 +419,9 @@ void drop_all_point(Board* b){
             if(p != &Default && p->state==Dead){
                 if(search_point_num(p->below) > 1 || p->x + p->weight == Board_SIZE)continue;
                 delete_point(p);
-                show_board(b);
-                printf("point num%d\r\n", search_point_num(p->below));
-                printf("hello%d\r\n", p->weight);
+                // show_board(b);
+                // printf("point num%d\r\n", search_point_num(p->below));
+                // printf("hello%d\r\n", p->weight);
                 release_board(b, p);
                 drop_point(b, p);
                 make_graph(b, p);
@@ -403,4 +431,65 @@ void drop_all_point(Board* b){
         }
     }
     if(flag == 1)drop_all_point(b);
+}
+
+void show_all_point(Point* p, LinkList* used){
+    LinkList* top = p -> above;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            printf("%dのabove Point%d\r\n",p->weight, top -> p -> weight);
+        }
+        top = top -> next;
+    }
+    top = p -> below;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            printf("%dのbelow Point%d\r\n",p->weight, top -> p -> weight);
+        }
+        top = top -> next;
+    }   
+    top = p -> right;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            printf("%dのright Point%d\r\n",p->weight, top -> p -> weight);
+        }
+        top = top -> next;
+    }   
+    top = p -> left;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            printf("%dのleft Point%d\r\n",p->weight, top -> p -> weight);
+        }
+        top = top -> next;
+    }   
+    insert_point(used, p);
+
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            show_all_point(top -> p, used);
+        }
+        top = top -> next;
+    }
+    top = p -> below;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            show_all_point(top -> p, used);
+        }
+        top = top -> next;
+    }   
+    top = p -> right;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            show_all_point(top -> p, used);
+        }
+        top = top -> next;
+    }   
+    top = p -> left;
+    while(top){
+        if(top -> p && !search_point_linklist(used, top -> p)){
+            show_all_point(top -> p, used);
+        }
+        top = top -> next;
+    }   
+
 }

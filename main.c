@@ -27,12 +27,16 @@ int main(int argc, char* argv[]){
         printf("Press '.' to close\r\n");        
         printf("You pressed '%c'\r\n", c);
         printf("Score: %d\r\n", Score);
-        pos = get_character(c, &b, pos);    
+        
+        pos = get_character(c, &b, pos);
+        LinkList* used = malloc(sizeof(LinkList));
         make_all_graph(&b);
+        // show_all_point(pos, used);
         drop_all_point(&b);
         under_line(&b, pos);
         show_board(&b);
         reset_line(&b, pos);
+
         if(GameOver == 1){
             printf("GameOver\r\n");
             break;
@@ -44,5 +48,4 @@ int main(int argc, char* argv[]){
     }
     system("/bin/stty cooked");  // 後始末
     return 0;
-
 }

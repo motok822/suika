@@ -63,7 +63,7 @@ void release_board(Board* b, Point* p);
 int search_alive_point(Board* b);
 int IsInBoard(Point*p, int dx, int dy);
 void drop_point(Board* b, Point* p);
-Point* new_point(int random);
+Point* new_point(Board* b, int random);
 Point* get_character(int, Board*, Point*);
 int touching(Board* b, Point* p, Point* q);
 Point* grown_one_direction(Board* b, LinkList* l, Point* p);
@@ -79,6 +79,7 @@ void delete_point_in_linklist(LinkList* top,Point* p);
 int search_point_linklist(LinkList* l, Point* p);
 int search_adjoining_point(Point* center, Point* p);
 void show_PointQueue();//debug
+void show_all_point(Point* p, LinkList* used);//debug;
 Point* search_same_weight_linklist(LinkList* l, Point* p);
 void insert_above(Point* p, Point* q);
 void insert_below(Point* p, Point* q);

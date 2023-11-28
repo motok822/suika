@@ -75,7 +75,7 @@ void minus_above(Board* b, LinkList* top){
         if(top -> p){
             release_board(b, top -> p);
             top -> p -> x--;
-            // printf("weight%d num%d y%d\r\n", top -> p -> weight, search_point_num(top -> p -> above), top -> p -> y);
+            printf("weight%d num%d y%d\r\n", top -> p -> weight, search_point_num(top -> p -> above), top -> p -> y);
             minus_above(b, top -> p -> above);
             if(!able_to_put(b, top -> p)){
                 GameOver = 1;
