@@ -32,7 +32,20 @@ int main(int argc, char* argv[]){
         LinkList* used = malloc(sizeof(LinkList));
         make_all_graph(&b);
         // show_all_point(pos, used);
-        drop_all_point(&b);
+        // LinkList* dropped_points = malloc(sizeof(LinkList));
+        // do{
+        //     free(dropped_points);
+        //     dropped_points = malloc(sizeof(LinkList));
+        //     drop_all_point(&b, dropped_points);
+        //     LinkList* top = dropped_points;
+        //     printf("hello\r\n")
+        //     while(top){
+        //         if(top -> p)check_board(&b, top -> p);
+        //         top = top -> next;
+        //     }
+        // }while(search_point_num(dropped_points) > 1);
+        LinkList* dropped_points = malloc(sizeof(LinkList));
+        drop_all_point(&b, dropped_points);
         under_line(&b, pos);
         show_board(&b);
         reset_line(&b, pos);

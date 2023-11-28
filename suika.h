@@ -57,7 +57,7 @@ typedef struct Board{
 void initialize_board(Board* b);
 void show_board(Board* b);
 void update_board(Board* b, Point* p);
-void update_grown_point_board(Board* b, Point* p);
+int update_grown_point_board(Board* b, Point* p);
 int able_to_put(Board* b, Point* p);
 void release_board(Board* b, Point* p);
 int search_alive_point(Board* b);
@@ -71,7 +71,7 @@ void check_board(Board* b, Point* p);
 void make_graph(Board* b, Point* p);
 void under_line(Board* b, Point* p);
 void reset_line(Board* b, Point* p);
-void drop_all_point(Board* b);
+void drop_all_point(Board* b, LinkList* top);
 
 void insert_point(LinkList* top,Point* p);
 void delete_point(Point* p);
@@ -102,5 +102,6 @@ void make_graph_above_linklist(Board* b, LinkList* top);
 void push_above(Board* b, LinkList* top);
 int able_to_put_left(LinkList* top);
 int able_to_put_right(LinkList* top);
+int able_to_put_above(LinkList* top);
 // void insert_graph(GraphList* top, Graph* g);
 // void insert_graph(GraphList* top, Graph* g);

@@ -68,7 +68,7 @@ void show_board(Board *b){
                     }
                     break;
                 case watermelon:
-                    printf("\x1b[32m");
+                    printf("\x1b[39m");
                     if(b->field[i][j] == &Default2){
                         printf("|");
                     }else{
@@ -241,12 +241,12 @@ int able_to_put(Board* b, Point* p){
     return flag;
 }
 
-void update_grown_point_board(Board* b, Point* p){
+int update_grown_point_board(Board* b, Point* p){
     int topX = p->x - 1;
     int topY = p->y - 1;
     int put = 0;
     for(int i = 0;i < p->weight;i++){
-        if(topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
+        if(topX >= 0 && topY+i >= 0 && topY+i+p->weight-1 < Board_SIZE){
             p->x = topX;
             p->y = topY + i;
             if(able_to_put(b, p)){ //他のPointを押しのけない
@@ -259,19 +259,26 @@ void update_grown_point_board(Board* b, Point* p){
     if(put == 0){ //他のPointを押しのけないで置くことが不可能 上に押しのけるのは確定で、左か右かは不確定
         p -> x = topX;
         p -> y = topY;
-        push_above(b, p -> above);
-        if(GameOver)return;
-        if(topY >= 0 && able_to_put_left(p -> left)){
-            push_left(b, p -> left);
-            update_board(b, p);
-
-        }else if(able_to_put_right(p -> right)){
-            push_right(b, p -> right);
-            p -> y ++;
-            update_board(b, p);
+        if(topX >= 0 && topY >= 0 && able_to_put_above(p -> above)){
+            push_above(b, p -> above);
+            if(GameOver)return 0;
+            if(topY >= 0 && able_to_put_left(p -> left)){
+                push_left(b, p -> left);
+                update_board(b, p);
+            }else if(able_to_put_right(p -> right)){
+                push_right(b, p -> right);
+                p -> y ++;
+                update_board(b, p);
+            }   
+            put = 1;
         }
     }
-    Score += 1 << (p -> weight);
+    if(put == 1)Score += 1 << (p -> weight);
+    else{
+        p -> x ++;
+        p -> y ++;
+    }
+    return put;
 }
 
 Point* grown_one_direction(Board* b, LinkList* l, Point* p){
@@ -288,13 +295,28 @@ Point* grown_one_direction(Board* b, LinkList* l, Point* p){
         p -> left = NULL;
         if(q -> weight != watermelon){
             q -> weight += 1;
-            update_grown_point_board(b, q);
-            make_graph(b, q);
+            int put = update_grown_point_board(b, q);
+            printf("put %d\r\n",put);
+            if(put == 1){
+                make_graph(b, q);
+                return q;
+            }else{
+                q -> weight--;
+                p -> above = malloc(sizeof(LinkList));
+                p -> below = malloc(sizeof(LinkList));
+                p -> right = malloc(sizeof(LinkList));
+                p -> left = malloc(sizeof(LinkList));
+                update_board(b, p);
+                update_board(b, q);
+                make_graph(b, p);
+                make_graph(b, q);
+            }
+            return NULL;
         }else{
             q -> weight = nothing;
             Score += (watermelon + 1);
+            return q;
         }
-        return q;
     }
     return NULL;
 }
@@ -411,7 +433,7 @@ void reset_line(Board* b, Point* p){
     }
 }
 
-void drop_all_point(Board* b){
+void drop_all_point(Board* b, LinkList* top){
     int flag = 0;
     for(int i = 0;i < Board_SIZE;i++){
         for(int j = 0;j < Board_SIZE;j++){
@@ -426,11 +448,12 @@ void drop_all_point(Board* b){
                 drop_point(b, p);
                 make_graph(b, p);
                 update_board(b, p);
+                insert_point(top, p);
                 flag = 1;
             }
         }
     }
-    if(flag == 1)drop_all_point(b);
+    if(flag == 1)drop_all_point(b, top);
 }
 
 void show_all_point(Point* p, LinkList* used){
