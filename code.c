@@ -106,6 +106,19 @@ void release_board(Board* b, Point* p){
     }
 }
 
+void make_all_graph(Board* b){
+    LinkList* list = malloc(sizeof(LinkList));
+    for(int i = 0;i < Board_SIZE;i++){
+        for(int j = 0;j < Board_SIZE;j++){
+            Point* p = b->field[i][j];
+            if(p != &Default && !search_point_linklist(list, p)){
+                make_graph(b, p);
+                insert_point(list, p);
+            }
+        }
+    }
+}
+
 void make_graph(Board* b, Point* p){
     if(p->x < Board_SIZE - p->weight){ //下方向の接触
         for(int i = 0;i < p->weight;i++){
@@ -151,7 +164,7 @@ void drop_point(Board* b, Point* p){
     }// p->x p->y に配置
 
     //ここからはグラフの構築
-    make_graph(b, p);
+    // make_graph(b, p);
     p->state = Dead;
 }   
 
@@ -230,15 +243,17 @@ void update_grown_point_board(Board* b, Point* p){
         p -> y = topY;
         push_above(b, p -> above);
         if(GameOver)return;
-        if(able_to_put_left(p -> left)){
+        if(topY >= 0 && able_to_put_left(p -> left)){
             push_left(b, p -> left);
             update_board(b, p);
+
         }else if(able_to_put_right(p -> right)){
-            push_right(b, p->right);
+            push_right(b, p -> right);
             p -> y ++;
             update_board(b, p);
         }
     }
+    Score += 1 << (p -> weight);
 }
 
 Point* grown_one_direction(Board* b, LinkList* l, Point* p){
@@ -248,9 +263,14 @@ Point* grown_one_direction(Board* b, LinkList* l, Point* p){
         release_board(b, q);
         delete_point(p);
         delete_point(q);
-        q -> weight += 1;
-        update_grown_point_board(b, q);
-        make_graph(b, q);
+        if(q -> weight != watermelon){
+            q -> weight += 1;
+            update_grown_point_board(b, q);
+            make_graph(b, q);
+        }else{
+            q -> weight = nothing;
+            Score += (watermelon + 1);
+        }
         return q;
     }
     return NULL;
@@ -300,6 +320,7 @@ Point* get_character(int c, Board* b, Point* p){
                 release_board(b, p);
                 drop_point(b, p);
                 update_board(b, p);
+                make_graph(b, p);
                 check_board(b, p);   
                 break;
             }//elseの場合はdefaultの処理
@@ -360,4 +381,26 @@ void reset_line(Board* b, Point* p){
         }
         x++;
     }
+}
+
+void drop_all_point(Board* b){
+    int flag = 0;
+    for(int i = 0;i < Board_SIZE;i++){
+        for(int j = 0;j < Board_SIZE;j++){
+            Point* p = b -> field[i][j];
+            if(p != &Default && p->state==Dead){
+                if(search_point_num(p->below) > 1 || p->x + p->weight == Board_SIZE)continue;
+                delete_point(p);
+                show_board(b);
+                printf("point num%d\r\n", search_point_num(p->below));
+                printf("hello%d\r\n", p->weight);
+                release_board(b, p);
+                drop_point(b, p);
+                make_graph(b, p);
+                update_board(b, p);
+                flag = 1;
+            }
+        }
+    }
+    if(flag == 1)drop_all_point(b);
 }

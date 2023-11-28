@@ -1,12 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-#define Board_SIZE 25
+#define Board_SIZE 20
 #define Alive 1
 #define Dead 0
 #define FruitKind 4
 #define RandomFruit 1
 extern int GameOver;
+extern int Score;
 
 typedef enum{
     nothing, //white
@@ -70,6 +71,7 @@ void check_board(Board* b, Point* p);
 void make_graph(Board* b, Point* p);
 void under_line(Board* b, Point* p);
 void reset_line(Board* b, Point* p);
+void drop_all_point(Board* b);
 
 void insert_point(LinkList* top,Point* p);
 void delete_point(Point* p);
@@ -83,6 +85,7 @@ void insert_below(Point* p, Point* q);
 void insert_right(Point* p, Point* q);
 void insert_left(Point* p, Point* q);
 int search_point_num(LinkList* l);
+void make_all_graph(Board* b);
 
 void minus_left(Board* b, LinkList* top);
 void delete_graph_left_linklist(Board* b, LinkList* top);

@@ -1,5 +1,6 @@
 #include "suika.h"
 int GameOver = 0;
+int Score = 0;
 
 int main(int argc, char* argv[]){
     Board b;
@@ -18,14 +19,17 @@ int main(int argc, char* argv[]){
     pos -> below = malloc(sizeof(LinkList));
     pos -> right = malloc(sizeof(LinkList));
     pos -> left = malloc(sizeof(LinkList));
-    char str[100];
+    char str[1000];
     int i = 0;
     while(1){
         system("clear");
+        printf("\x1b[39m");
         printf("Press '.' to close\r\n");        
         printf("You pressed '%c'\r\n", c);
-
+        printf("Score: %d\r\n", Score);
         pos = get_character(c, &b, pos);    
+        make_all_graph(&b);
+        drop_all_point(&b);
         under_line(&b, pos);
         show_board(&b);
         reset_line(&b, pos);
