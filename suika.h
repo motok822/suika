@@ -8,6 +8,7 @@
 #define RandomFruit 1
 extern int GameOver;
 extern int Score;
+extern int drop_flag;
 
 typedef enum{
     nothing, //white
@@ -16,6 +17,7 @@ typedef enum{
     pear,   //skyblue
     apple,  //blue
     grape,  //magenta
+    melon, //yellow
     watermelon,  //green
 }fruit;
 
@@ -103,5 +105,8 @@ void push_above(Board* b, LinkList* top);
 int able_to_put_left(LinkList* top);
 int able_to_put_right(LinkList* top);
 int able_to_put_above(LinkList* top);
+int able_to_put_above_self(Point *p);
+int able_to_put_right_self(Point *p);
+int able_to_put_left_self(Point *p);
 // void insert_graph(GraphList* top, Graph* g);
 // void insert_graph(GraphList* top, Graph* g);

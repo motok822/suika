@@ -7,4 +7,9 @@ suika: $(OBJS)
 
 $(OBJS): suika.h
 
-test: ./suika
+run: ./suika
+
+clean:
+		rm -f suika *.o
+
+.PHONY: run clean

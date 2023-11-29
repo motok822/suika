@@ -1,6 +1,7 @@
 #include "suika.h"
 int GameOver = 0;
 int Score = 0;
+int drop_flag = 0;
 
 int main(int argc, char* argv[]){
     Board b;
@@ -27,30 +28,27 @@ int main(int argc, char* argv[]){
         printf("Press '.' to close\r\n");        
         printf("You pressed '%c'\r\n", c);
         printf("Score: %d\r\n", Score);
-        
+
+        drop_flag = 0;
         pos = get_character(c, &b, pos);
-        LinkList* used = malloc(sizeof(LinkList));
-        make_all_graph(&b);
-        // show_all_point(pos, used);
-        // LinkList* dropped_points = malloc(sizeof(LinkList));
-        // do{
-        //     free(dropped_points);
-        //     dropped_points = malloc(sizeof(LinkList));
-        //     drop_all_point(&b, dropped_points);
-        //     LinkList* top = dropped_points;
-        //     printf("hello\r\n")
-        //     while(top){
-        //         if(top -> p)check_board(&b, top -> p);
-        //         top = top -> next;
-        //     }
-        // }while(search_point_num(dropped_points) > 1);
-        LinkList* dropped_points = malloc(sizeof(LinkList));
-        drop_all_point(&b, dropped_points);
+
+        if(drop_flag == 1){
+            make_all_graph(&b);
+            LinkList* dropped_points = malloc(sizeof(LinkList));
+            drop_all_point(&b, dropped_points);
+            LinkList* top = dropped_points;
+            while(top){
+                if(top -> p && top -> p -> state == Dead)check_board(&b, top -> p);
+                top = top -> next;
+            }
+        }
+        
         under_line(&b, pos);
         show_board(&b);
         reset_line(&b, pos);
 
         if(GameOver == 1){
+            printf("\x1b[39m");
             printf("GameOver\r\n");
             break;
         }

@@ -67,6 +67,14 @@ void show_board(Board *b){
                         printf("%c", b->field[i][j]->weight + '0');
                     }
                     break;
+                case melon:
+                    printf("\x1b[32m");
+                    if(b->field[i][j] == &Default2){
+                        printf("|");
+                    }else{
+                        printf("%c", b->field[i][j]->weight + '0');
+                    }
+                    break;
                 case watermelon:
                     printf("\x1b[39m");
                     if(b->field[i][j] == &Default2){
@@ -259,7 +267,7 @@ int update_grown_point_board(Board* b, Point* p){
     if(put == 0){ //他のPointを押しのけないで置くことが不可能 上に押しのけるのは確定で、左か右かは不確定
         p -> x = topX;
         p -> y = topY;
-        if(topX >= 0 && topY >= 0 && able_to_put_above(p -> above)){
+        if(topX >= 0 && able_to_put_above(p -> above)){
             push_above(b, p -> above);
             if(GameOver)return 0;
             if(topY >= 0 && able_to_put_left(p -> left)){
@@ -296,7 +304,6 @@ Point* grown_one_direction(Board* b, LinkList* l, Point* p){
         if(q -> weight != watermelon){
             q -> weight += 1;
             int put = update_grown_point_board(b, q);
-            printf("put %d\r\n",put);
             if(put == 1){
                 make_graph(b, q);
                 return q;
@@ -330,8 +337,29 @@ int search_point_num(LinkList* l){
     return num;
 }
 
+int able_to_grow(Board* b, LinkList* top, Point* p){
+    Point* q;
+    if((q = search_same_weight_linklist(top, p)) && q){
+        release_board(b, p);
+        delete_point(p);
+        if(able_to_put_above_self(q) && able_to_put_above(q-> above) && ((able_to_put_left(q -> left) &&able_to_put_left_self(q)) || (able_to_put_right(q -> right) && able_to_put_right_self(q)))){
+            make_graph(b, p);
+            update_board(b, p);
+            return 1;
+        }else{
+            make_graph(b, p);
+            update_board(b, p);
+            return 0;
+        }
+    }
+    return 0;
+}
+
 void check_board(Board* b, Point* p){
     Point* merge = NULL;
+    if(!able_to_grow(b, p->above, p) && !able_to_grow(b, p->below, p) && !able_to_grow(b, p->right, p)&& !able_to_grow(b, p->left, p)){
+        return;
+    }
     if((merge = grown_one_direction(b, p->above, p)) && merge);
     else if((merge = grown_one_direction(b, p->below, p)) && merge);
     else if((merge = grown_one_direction(b, p->left, p)) && merge );
@@ -367,6 +395,7 @@ Point* get_character(int c, Board* b, Point* p){
                 update_board(b, p);
                 make_graph(b, p);
                 check_board(b, p);   
+                drop_flag = 1;
                 break;
             }//elseの場合はdefaultの処理
         default: //Pointの追加
